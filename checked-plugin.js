@@ -23,8 +23,6 @@ templateCell_$PLUGIN_ID.innerHTML = `
 </style>
 
 <div id="container">
-    <input type="text" id="input" oninput="checkInput()">
-    <div id="result"></div>
 </div>
 `;
 
@@ -41,6 +39,10 @@ class OuterbasePluginCell_$PLUGIN_ID extends HTMLElement {
         return privileges;  // Observe the defined privileges
     }
 
+
+    trueSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15a84f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-square"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>';
+    
+    falseSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e76f51" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>';
     config = new OuterbasePluginConfig_$PLUGIN_ID({})
 
     constructor() {
@@ -59,30 +61,57 @@ class OuterbasePluginCell_$PLUGIN_ID extends HTMLElement {
             JSON.parse(this.getAttribute('configuration'))
         )
 
-        // Set the default value based on input
-        this.shadow.querySelector('#input').value = this.getAttribute('cellvalue')
+        this.render()
+    }
 
-        // Retrieve input and result elements
-        var boolInput = this.shadow.getElementById("input");
-        var resultElement = this.shadow.getElementById("result");
+    render(){
 
-        // Trim and convert input to lowercase
-        var inputValue = boolInput.value.trim().toLowerCase();
+        //get container        
+        const containerEl = this.shadow.getElementById("container");
 
-        // Define SVG icons for true and false input
-        var trueSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15a84f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-square"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>';
+        //cell value
+        const cellValue = this.getAttribute('cellValue');
 
-        var falseSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e76f51" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>';
+        //parsedCellValue 
+        const parsedCellValue = cellValue === null ? null : this.booleanParser(cellValue);
 
-        if (inputValue === "true") {
-            // Display a circle SVG for true input
-            resultElement.innerHTML = trueSVG;
-        } else if (inputValue === "false") {
-            // Display a square SVG for false input
-            resultElement.innerHTML = falseSVG;
-        } else {
-            resultElement.innerHTML = ""; // Clear the result if the input is invalid
-        }
+        //render cellValue at time;
+        this.renderTrueFalseSvg(parsedCellValue, containerEl);
+
+        //update on click
+        containerEl.addEventListener('click', (event)=>{
+            console.log(containerEl.innerHTML === '')
+            if(containerEl.innerHTML === ''){
+                this.renderTrueFalseSvg(!parsedCellValue, containerEl);
+            }else{
+                //TODO TABLE DATA UPDATE VALUE 
+
+                //SHORTCUT FOR NOW UI CHANGE ONLY NOT VALUE 
+                containerEl.innerHTML === this.trueSVG ? containerEl.innerHTML = this.falseSVG : containerEl.innerHTML = this.trueSVG;
+                
+            }
+
+        })
+
+    }
+
+
+    renderTrueFalseSvg(cellValue, htmlElement){
+        cellValue ? htmlElement.innerHTML = this.trueSVG : (cellValue == null) ? htmlElement.innerHTML = 'NULL' : htmlElement.innerHTML = this.falseSVG;
+    }   
+
+    //converting any string, number, null or undefined to boolean
+    booleanParser(value){
+        if (typeof value === 'boolean') {
+            return value;
+          }
+        
+          if (typeof value === 'string') {
+            value = value.trim().toLowerCase();
+            return !(value === 'false' || value === 'no' || value === 'off' || value === '' || value === ' ' || value === '0');
+          }
+        
+          return Boolean(value);
     }
 
     // Custom method to call a custom event.
